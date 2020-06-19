@@ -33,14 +33,14 @@ async function updateGist(data) {
   lines.push(karmaPoint.join(" "));
 
   const dailyGoal = [
-    `🌞 Completed ${days_items[0].total_completed.toString()} tasks out of ${
+    `🌞 Completed ${days_items[0].completed.toString()} tasks out of ${
       goals.daily_goal
     } today`,
   ];
   lines.push(dailyGoal.join(" "));
 
   const weeklyGoal = [
-    `📅 Completed ${week_items[0].total_completed.toString()} tasks out of ${
+    `📅 Completed ${week_items[0].completed.toString()} tasks out of ${
       goals.weekly_goal
     } this week`,
   ];
