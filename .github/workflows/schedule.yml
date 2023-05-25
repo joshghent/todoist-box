@@ -9,7 +9,7 @@ on:
 
 jobs:
   update-gist:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@master
