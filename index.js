@@ -13,9 +13,9 @@ const octokit = new Octokit({ auth: `token ${githubToken}` });
 
 async function main() {
   const stats = await axios(
-    `https://api.todoist.com/sync/v8.6/completed/get_stats?token=${todoistApiKey}`
+    `https://api.todoist.com/sync/v9/completed/get_stats?token=${todoistApiKey}`
   );
-  await updateGist(stats.data);
+  await updateGist(stats);
 }
 
 async function updateGist(data) {
