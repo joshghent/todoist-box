@@ -1,6 +1,5 @@
 require("dotenv").config();
 const { Octokit } = require("@octokit/rest");
-const axios = require("axios");
 const humanize = require("humanize-number");
 
 const {

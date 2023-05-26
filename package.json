@@ -5,23 +5,17 @@
   "author": "Yogi <ygcodes@icloud.com>",
   "license": "MIT",
   "scripts": {
-    "build": "ncc build index.js --out dist --minify"
+    "build": "ncc build index.js --out dist --minify --target es2022"
   },
   "dependencies": {
-    "@octokit/rest": "18.0.0",
-    "axios": "^0.21.1",
-    "dotenv": "8.2.0",
+    "@octokit/rest": "19.0.11",
+    "dotenv": "16.0.3",
     "humanize-number": "0.0.2"
   },
   "devDependencies": {
-    "@zeit/ncc": "0.22.3",
-    "husky": "4.2.5",
-    "prettier": "2.0.5",
-    "pretty-quick": "2.0.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
+    "@vercel/ncc": "^0.36.1",
+    "husky": "8.0.3",
+    "prettier": "2.8.8",
+    "pretty-quick": "3.1.3"
   }
 }
