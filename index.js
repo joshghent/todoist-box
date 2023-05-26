@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { Octokit } = require("@octokit/rest");
 const humanize = require("humanize-number");
+const fetch = require("node-fetch");
 
 const {
   GIST_ID: gistId,
