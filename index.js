@@ -12,9 +12,19 @@ const {
 const octokit = new Octokit({ auth: `token ${githubToken}` });
 
 async function main() {
-  const stats = await axios(
-    `https://api.todoist.com/sync/v9/completed/get_stats?token=${todoistApiKey}`
+  const response = await fetch(
+    `https://api.todoist.com/sync/v9/completed/get_stats`,
+    {
+      method: "GET", // *GET, POST, PUT, DELETE, etc.
+      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${todoistApiKey}`,
+      },
+    }
   );
+
+  const stats = await response.json();
   await updateGist(stats);
 }
 
