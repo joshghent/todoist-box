@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Octokit } = require("@octokit/rest");
+const { getOctokit } = require("@actions/github");
 const humanize = require("humanize-number");
 const fetch = require("node-fetch");
 
@@ -9,7 +9,7 @@ const {
   TODOIST_API_KEY: todoistApiKey,
 } = process.env;
 
-const octokit = new Octokit({ auth: `token ${githubToken}` });
+const octokit = getOctokit(githubToken);
 
 async function main() {
   const response = await fetch(
@@ -31,7 +31,7 @@ async function main() {
 async function updateGist(data) {
   let gist;
   try {
-    gist = await octokit.gists.get({ gist_id: gistId });
+    gist = await octokit.rest.gists.get({ gist_id: gistId });
   } catch (error) {
     console.error(`Unable to get gist\n${error}`);
   }
@@ -66,7 +66,7 @@ async function updateGist(data) {
     console.log(lines.join("\n"));
     // Get original filename to update that same file
     const filename = Object.keys(gist.data.files)[0];
-    await octokit.gists.update({
+    await octokit.rest.gists.update({
       gist_id: gistId,
       files: {
         [filename]: {
