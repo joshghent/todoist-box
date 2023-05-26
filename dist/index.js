@@ -509,10 +509,19 @@ module.exports = (function (e, p) {
     const { GIST_ID: r, GH_TOKEN: s, TODOIST_API_KEY: o } = process.env;
     const n = new d({ auth: `token ${s}` });
     async function main() {
-      const e = await t(
-        `https://api.todoist.com/sync/v9/completed/get_stats?token=${o}`
+      const e = await fetch(
+        `https://api.todoist.com/sync/v9/completed/get_stats`,
+        {
+          method: "GET",
+          cache: "no-cache",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${o}`,
+          },
+        }
       );
-      await updateGist(e);
+      const p = await e.json();
+      await updateGist(p);
     }
     async function updateGist(e) {
       let p;
