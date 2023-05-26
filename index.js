@@ -64,17 +64,20 @@ async function updateGist(data) {
 
   try {
     console.log(lines.join("\n"));
-    // Get original filename to update that same file
-    const filename = Object.keys(gist.data.files)[0];
-    await octokit.rest.gists.update({
-      gist_id: gistId,
-      files: {
-        [filename]: {
-          filename: `✅ Todoist Stats`,
-          content: lines.join("\n"),
+    console.log(gist);
+    if (gist) {
+      // Get original filename to update that same file
+      const filename = Object.keys(gist.data.files)[0];
+      await octokit.rest.gists.update({
+        gist_id: gistId,
+        files: {
+          [filename]: {
+            filename: `✅ Todoist Stats`,
+            content: lines.join("\n"),
+          },
         },
-      },
-    });
+      });
+    }
   } catch (error) {
     console.error(`Unable to update gist\n${error}`);
   }
