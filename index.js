@@ -56,7 +56,7 @@ async function updateGist(data) {
   lines.push(totalTasks.join(" "));
 
   const longestStreak = [
-    `⌛ Longest streak is ${humanize(goals.last_daily_streak.count)} days`,
+    `⌛ Current streak is ${humanize(goals.last_daily_streak.count)} days`,
   ];
   lines.push(longestStreak.join(" "));
 
