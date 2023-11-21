@@ -19,12 +19,12 @@
 
 ### Project setup
 
-1. Generate a repo from this template by clicking [here](https://github.com/yg/todoist-box/generate)
+1. Generate a repo from this template by clicking [here](https://github.com/joshghent/todoist-box/generate)
 1. Fill in the details and click `Create repository from template`
 1. Go to the repo **Settings > Secrets**
 1. Add the following environment variables:
    - **GH_TOKEN:** The GitHub token generated above.
-   - **GIST_ID:** The ID portion from your gist url: `https://gist.github.com/yg/`**`a582ad10a45dc17815feea6018223880`**.
+   - **GIST_ID:** The ID portion from your gist url: `https://gist.github.com/joshghent/`**`a582ad10a45dc17815feea6018223880`**.
    - **TODOIST_API_KEY:** The API token for your Todoist account.
 
 ## License
