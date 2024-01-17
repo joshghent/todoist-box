@@ -30,7 +30,14 @@ jobs:
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git commit -a -m "👷‍♂️ Build project"
+          git add .
+          git diff --staged --exit-code
+          if [ $? -ne 0 ]; then
+            echo "Changes detected, committing..."
+            git commit -m "👷‍♂️ Build project"
+          else
+            echo "No changes to commit."
+          fi
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
