@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 * * * *"
   push:
-    branches: master
+    branches: main
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 16
       - name: Update gist
-        uses: joshghent/todoist-box@master
+        uses: joshghent/todoist-box@main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
