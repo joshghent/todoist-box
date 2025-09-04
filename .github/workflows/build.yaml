@@ -26,6 +26,10 @@ jobs:
           restore-keys: node_modules- # Take any latest cache if failed to find it for current yarn.lock
       - run: npm install
       - run: npm run build
+      - name: Ensure EOF newline
+        run: |
+          find . -type f -not -path '*/\.git/*' -exec sh -c \
+          'f="{}"; [ -f "$f" ] && [ -w "$f" ] && [ "$(tail -c1 "$f"; echo x)" != $'\nx' ] && echo >> "$f"' \;
       - name: Commit files
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
