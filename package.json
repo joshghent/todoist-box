@@ -2,7 +2,7 @@
   "name": "todoist-box",
   "version": "1.0.0",
   "description": "📊 Update a gist to contain your Todoist stats",
-  "author": "Josh Ghent <me@joshghent.com>",
+  "author": "Josh",
   "license": "MIT",
   "scripts": {
     "build": "ncc build index.js --out dist --minify --target es2022"
