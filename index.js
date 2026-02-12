@@ -1,31 +1,147 @@
 require("dotenv").config();
 const { getOctokit } = require("@actions/github");
 const humanize = require("humanize-number");
-const fetch = require("node-fetch");
 
 const {
   GIST_ID: gistId,
   GH_TOKEN: githubToken,
   TODOIST_API_KEY: todoistApiKey,
+  TODOIST_CLIENT_ID: clientId,
+  TODOIST_CLIENT_SECRET: clientSecret,
 } = process.env;
 
 const octokit = getOctokit(githubToken);
 
-async function main() {
+async function migrateToken() {
   const response = await fetch(
-    `https://api.todoist.com/sync/v9/completed/get_stats`,
+    "https://api.todoist.com/api/v1/access_tokens/migrate_personal_token",
     {
-      method: "GET", // *GET, POST, PUT, DELETE, etc.
-      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${todoistApiKey}`,
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        personal_token: todoistApiKey,
+        scope: "data:read",
+      }),
     }
   );
 
-  const stats = await response.json();
-  await updateGist(stats);
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      `Failed to migrate token (${response.status}): ${JSON.stringify(data)}`
+    );
+  }
+  return data.access_token;
+}
+
+async function fetchData(accessToken) {
+  const [syncRes, streakDays] = await Promise.all([
+    fetch("https://api.todoist.com/api/v1/sync", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: 'sync_token=*&resource_types=["user","stats"]',
+    }),
+    fetchStreakDays(accessToken),
+  ]);
+
+  const syncData = await syncRes.json();
+  if (!syncRes.ok) {
+    throw new Error(
+      `Failed to fetch sync data (${syncRes.status}): ${JSON.stringify(syncData)}`
+    );
+  }
+
+  return {
+    karma: syncData.user.karma,
+    completed_count: syncData.stats.completed_count,
+    days_items: syncData.stats.days_items,
+    week_items: syncData.stats.week_items,
+    streak: streakDays,
+  };
+}
+
+async function fetchStreakDays(accessToken) {
+  const dates = new Set();
+  let cursor = null;
+
+  while (true) {
+    const url = cursor
+      ? `https://api.todoist.com/api/v1/activities?event_type=completed&limit=100&cursor=${cursor}`
+      : "https://api.todoist.com/api/v1/activities?event_type=completed&limit=100";
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const data = await res.json();
+    if (!res.ok) break;
+
+    for (const event of data.results) {
+      dates.add(event.event_date.substring(0, 10));
+    }
+
+    // Check if the streak is broken by looking at consecutive days
+    const sortedDates = [...dates].sort().reverse();
+    const today = new Date().toISOString().substring(0, 10);
+
+    // If the most recent completion isn't today or yesterday, streak is 0
+    if (sortedDates.length > 0) {
+      const diffFromToday = daysBetween(sortedDates[0], today);
+      if (diffFromToday > 1) return 0;
+    }
+
+    // Find where the streak breaks
+    let streakBroken = false;
+    for (let i = 1; i < sortedDates.length; i++) {
+      if (daysBetween(sortedDates[i], sortedDates[i - 1]) > 1) {
+        streakBroken = true;
+        break;
+      }
+    }
+
+    // If streak is unbroken and there are more pages, keep fetching
+    if (streakBroken || !data.next_cursor) {
+      return calculateStreak(sortedDates);
+    }
+
+    cursor = data.next_cursor;
+  }
+
+  return 0;
+}
+
+function daysBetween(dateA, dateB) {
+  const a = new Date(dateA);
+  const b = new Date(dateB);
+  return Math.round(Math.abs(b - a) / (1000 * 60 * 60 * 24));
+}
+
+function calculateStreak(sortedDates) {
+  if (sortedDates.length === 0) return 0;
+
+  const today = new Date().toISOString().substring(0, 10);
+  const diffFromToday = daysBetween(sortedDates[0], today);
+  if (diffFromToday > 1) return 0;
+
+  let streak = 1;
+  for (let i = 1; i < sortedDates.length; i++) {
+    if (daysBetween(sortedDates[i], sortedDates[i - 1]) === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+async function main() {
+  const accessToken = await migrateToken();
+  const data = await fetchData(accessToken);
+  await updateGist(data);
 }
 
 async function updateGist(data) {
@@ -37,34 +153,22 @@ async function updateGist(data) {
   }
 
   const lines = [];
-  const { karma, completed_count, days_items, week_items, goals } = data;
+  const { karma, completed_count, days_items, week_items, streak } = data;
 
-  const karmaPoint = [`🏆 ${humanize(karma)} Karma Points`];
-  lines.push(karmaPoint.join(" "));
-
-  const dailyGoal = [
-    `🌞 Completed ${days_items[0].total_completed.toString()} tasks today`,
-  ];
-  lines.push(dailyGoal.join(" "));
-
-  const weeklyGoal = [
-    `📅 Completed ${week_items[0].total_completed.toString()} tasks this week`,
-  ];
-  lines.push(weeklyGoal.join(" "));
-
-  const totalTasks = [`✅ Completed ${humanize(completed_count)} tasks so far`];
-  lines.push(totalTasks.join(" "));
-
-  const longestStreak = [
-    `⌛ Longest streak is ${humanize(goals.last_daily_streak.count)} days`,
-  ];
-  lines.push(longestStreak.join(" "));
+  lines.push(`🏆 ${humanize(karma)} Karma Points`);
+  lines.push(
+    `🌞 Completed ${days_items[0].total_completed.toString()} tasks today`
+  );
+  lines.push(
+    `📅 Completed ${week_items[0].total_completed.toString()} tasks this week`
+  );
+  lines.push(`✅ Completed ${humanize(completed_count)} tasks so far`);
+  lines.push(`⌛ Current streak is ${humanize(streak)} days`);
 
   if (lines.length == 0) return;
 
   try {
     console.log(lines.join("\n"));
-    console.log(gist);
     if (gist) {
       // Get original filename to update that same file
       const filename = Object.keys(gist.data.files)[0];

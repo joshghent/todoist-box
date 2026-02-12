@@ -22,3 +22,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
           TODOIST_API_KEY: ${{ secrets.TODOIST_API_KEY }}
+          TODOIST_CLIENT_ID: ${{ secrets.TODOIST_CLIENT_ID }}
+          TODOIST_CLIENT_SECRET: ${{ secrets.TODOIST_CLIENT_SECRET }}
