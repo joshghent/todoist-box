@@ -1,0 +1,48 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node_modules-${{hashFiles('package-lock.json')}}
+          restore-keys: node_modules- # Take any latest cache if failed to find it for current yarn.lock
+      - run: npm install
+      - run: npm run build
+      - name: Ensure EOF newline
+        run: |
+          find . -type f -not -path '*/\.git/*' -exec sh -c \
+          'f="{}"; [ -f "$f" ] && [ -w "$f" ] && [ "$(tail -c1 "$f")" != "" ] && echo >> "$f"' \;
+      - name: Commit files
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          if ! git diff --staged --exit-code; then
+            echo "Changes detected, committing..."
+            git commit -m "👷‍♂️ Build project"
+          else
+            echo "No changes to commit."
+          fi
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

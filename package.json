@@ -2,17 +2,16 @@
   "name": "todoist-box",
   "version": "1.0.0",
   "description": "📊 Update a gist to contain your Todoist stats",
-  "author": "Yogi <ygcodes@icloud.com>",
+  "author": "Josh",
   "license": "MIT",
   "scripts": {
     "build": "ncc build index.js --out dist --minify --target es2022"
   },
   "dependencies": {
-    "@actions/github": "^5.1.1",
-    "@octokit/rest": "19.0.11",
-    "dotenv": "16.0.3",
-    "humanize-number": "0.0.2",
-    "node-fetch": "^2.6.11"
+    "@actions/github": "^6.0.1",
+    "@octokit/rest": "22.0.0",
+    "dotenv": "17.2.2",
+    "humanize-number": "0.0.2"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.36.1",

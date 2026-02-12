@@ -34,4 +34,5 @@
 
 ## License
 
-MIT © [Yogi](LICENSE)
+Originally created by: [Yogi](LICENSE)
+Maintained by: [joshghent](https://joshghent.com)
