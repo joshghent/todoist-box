@@ -1,16 +1,27 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const { getOctokit } = require("@actions/github");
 const humanize = require("humanize-number");
 
 const {
   GIST_ID: gistId,
   GH_TOKEN: githubToken,
+  TODOIST_ACCESS_TOKEN: todoistAccessToken,
   TODOIST_API_KEY: todoistApiKey,
+  TODOIST_PERSONAL_TOKEN: todoistPersonalToken,
   TODOIST_CLIENT_ID: clientId,
   TODOIST_CLIENT_SECRET: clientSecret,
 } = process.env;
+const personalToken = todoistApiKey || todoistPersonalToken;
 
-const octokit = getOctokit(githubToken);
+function assertRequiredEnv() {
+  const missing = [];
+  if (!gistId) missing.push("GIST_ID");
+  if (!githubToken) missing.push("GH_TOKEN");
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+  }
+}
 
 async function migrateToken() {
   const response = await fetch(
@@ -21,7 +32,7 @@ async function migrateToken() {
       body: JSON.stringify({
         client_id: clientId,
         client_secret: clientSecret,
-        personal_token: todoistApiKey,
+        personal_token: personalToken,
         scope: "data:read",
       }),
     }
@@ -34,6 +45,25 @@ async function migrateToken() {
     );
   }
   return data.access_token;
+}
+
+async function getTodoistAccessToken() {
+  if (todoistAccessToken) {
+    return todoistAccessToken;
+  }
+
+  if (personalToken) {
+    if (!clientId || !clientSecret) {
+      throw new Error(
+        "Missing TODOIST_CLIENT_ID or TODOIST_CLIENT_SECRET for legacy personal token migration."
+      );
+    }
+    return migrateToken();
+  }
+
+  throw new Error(
+    "Missing Todoist auth. Set TODOIST_ACCESS_TOKEN (preferred) or provide TODOIST_API_KEY/TODOIST_PERSONAL_TOKEN with TODOIST_CLIENT_ID and TODOIST_CLIENT_SECRET."
+  );
 }
 
 async function fetchData(accessToken) {
@@ -139,12 +169,14 @@ function calculateStreak(sortedDates) {
 }
 
 async function main() {
-  const accessToken = await migrateToken();
+  assertRequiredEnv();
+  const accessToken = await getTodoistAccessToken();
   const data = await fetchData(accessToken);
   await updateGist(data);
 }
 
 async function updateGist(data) {
+  const octokit = getOctokit(githubToken);
   let gist;
   try {
     gist = await octokit.rest.gists.get({ gist_id: gistId });
