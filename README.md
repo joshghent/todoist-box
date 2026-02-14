@@ -28,10 +28,10 @@
 1. Add the following environment variables:
    - **GH_TOKEN:** The GitHub token generated above.
    - **GIST_ID:** The ID portion from your gist url: `https://gist.github.com/username/`**`a582ad10a45dc17815feea6018223880`**.
-   - **TODOIST_ACCESS_TOKEN (recommended):** OAuth access token for your Todoist account.
-   - **TODOIST_CLIENT_ID:** The Client ID from your registered Todoist app (required only if using legacy token migration).
-   - **TODOIST_CLIENT_SECRET:** The Client Secret from your registered Todoist app (required only if using legacy token migration).
-   - **TODOIST_API_KEY (legacy, optional):** Old personal API token. If set, the action migrates it to an OAuth access token each run.
+   - **TODOIST_CLIENT_ID:** The Client ID from your registered Todoist app.
+   - **TODOIST_CLIENT_SECRET:** The Client Secret from your registered Todoist app.
+   - **TODOIST_API_KEY (recommended):** Personal API token from Todoist settings. The action migrates it to an OAuth access token each run.
+   - **TODOIST_AUTH_CODE (optional alternative):** OAuth authorization code if you prefer OAuth code exchange instead of using `TODOIST_API_KEY`.
 
 ## License
 

@@ -5,7 +5,8 @@ const humanize = require("humanize-number");
 const {
   GIST_ID: gistId,
   GH_TOKEN: githubToken,
-  TODOIST_ACCESS_TOKEN: todoistAccessToken,
+  TODOIST_AUTH_CODE: todoistAuthCode,
+  TODOIST_REDIRECT_URI: todoistRedirectUri,
   TODOIST_API_KEY: todoistApiKey,
   TODOIST_PERSONAL_TOKEN: todoistPersonalToken,
   TODOIST_CLIENT_ID: clientId,
@@ -17,6 +18,8 @@ function assertRequiredEnv() {
   const missing = [];
   if (!gistId) missing.push("GIST_ID");
   if (!githubToken) missing.push("GH_TOKEN");
+  if (!clientId) missing.push("TODOIST_CLIENT_ID");
+  if (!clientSecret) missing.push("TODOIST_CLIENT_SECRET");
 
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
@@ -47,22 +50,44 @@ async function migrateToken() {
   return data.access_token;
 }
 
-async function getTodoistAccessToken() {
-  if (todoistAccessToken) {
-    return todoistAccessToken;
+async function exchangeAuthCodeForAccessToken() {
+  const payload = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    code: todoistAuthCode,
+  });
+
+  if (todoistRedirectUri) {
+    payload.append("redirect_uri", todoistRedirectUri);
   }
 
+  const response = await fetch("https://api.todoist.com/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: payload.toString(),
+  });
+
+  const data = await response.json();
+  if (!response.ok || !data.access_token) {
+    throw new Error(
+      `Failed to exchange OAuth code (${response.status}): ${JSON.stringify(data)}`
+    );
+  }
+
+  return data.access_token;
+}
+
+async function getTodoistAccessToken() {
   if (personalToken) {
-    if (!clientId || !clientSecret) {
-      throw new Error(
-        "Missing TODOIST_CLIENT_ID or TODOIST_CLIENT_SECRET for legacy personal token migration."
-      );
-    }
     return migrateToken();
   }
 
+  if (todoistAuthCode) {
+    return exchangeAuthCodeForAccessToken();
+  }
+
   throw new Error(
-    "Missing Todoist auth. Set TODOIST_ACCESS_TOKEN (preferred) or provide TODOIST_API_KEY/TODOIST_PERSONAL_TOKEN with TODOIST_CLIENT_ID and TODOIST_CLIENT_SECRET."
+    "Missing Todoist auth. Set TODOIST_API_KEY/TODOIST_PERSONAL_TOKEN (recommended long-lived secret) or use TODOIST_AUTH_CODE with TODOIST_CLIENT_ID/TODOIST_CLIENT_SECRET."
   );
 }
 
