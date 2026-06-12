@@ -14,9 +14,9 @@
     "humanize-number": "0.0.2"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.4",
+    "@vercel/ncc": "^0.44.0",
     "husky": "9.1.7",
-    "prettier": "3.8.3",
+    "prettier": "3.8.4",
     "pretty-quick": "4.2.2"
   },
   "packageManager": "yarn@4.12.0"
