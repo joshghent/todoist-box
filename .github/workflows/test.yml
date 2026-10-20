@@ -25,7 +25,10 @@ jobs:
           restore-keys: node_modules- # Take any latest cache if failed to find it for current package-lock.json
       - run: npm install
       - run: npm run build
+      # Dependabot runs get Dependabot secrets, not these, so the live run
+      # would fail on missing env vars. The build above still covers them.
       - run: node ./dist/index.js
+        if: github.actor != 'dependabot[bot]'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
